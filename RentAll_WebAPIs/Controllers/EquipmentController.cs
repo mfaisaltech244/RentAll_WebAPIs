@@ -39,24 +39,23 @@ namespace RentAll_WebAPIs.Controllers
         }
 
         [HttpPost]
-        [Authorize]
         [Consumes("Multipart/form-data")]
-        public async Task<IActionResult> AddEquipment([FromForm] EquipmentCreateDto dto,IFormFile? image)
+        public async Task<IActionResult> AddEquipment([FromForm] EquipmentCreateDto dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (image == null || image.Length == 0)
+            if (dto.Image == null || dto.Image.Length == 0)
                 return BadRequest(new { message = "Image is required." });
 
-            var ext = Path.GetExtension(image.FileName).ToLowerInvariant();
+            var ext = Path.GetExtension(dto.Image.FileName).ToLowerInvariant();
             if (!AllowedExtensions.Contains(ext))
                 return BadRequest(new { message = "Only .jpg, .jpeg, .png, .webp files are allowed." });
 
-            if (image.Length > MaxFileSizeBytes)
+            if (dto.Image.Length > MaxFileSizeBytes)
                 return BadRequest(new { message = "File size exceeds the 5 MB limit." });
 
-            var imageUrl = await _fileService.SaveFileAsync(image);
+            var imageUrl = await _fileService.SaveFileAsync(dto.Image);
             var equipment = await _equipmentService.AddEquipmentAsync(dto, imageUrl);
 
             return CreatedAtAction(nameof(GetById), new { id = equipment.Id }, equipment);

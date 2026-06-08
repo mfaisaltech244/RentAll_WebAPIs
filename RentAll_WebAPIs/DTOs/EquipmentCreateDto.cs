@@ -20,6 +20,7 @@ namespace RentAll_WebAPIs.DTOs
         public decimal DailyRate { get; set; }
 
         public bool IsAvailable { get; set; } = true;
+        public IFormFile Image { get; set; }
     }
 
     public class EquipmentUpdateDto
