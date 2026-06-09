@@ -84,23 +84,29 @@ namespace RentAll_WebAPIs.Services
 
         public async Task<bool> UpdateBookingStatusAsync(int id, string status)
         {
-            var booking = await _context.Bookings.FindAsync(id);
+            var booking = await _context.Bookings
+                .Include(b => b.Equipment)   // add this
+                .FirstOrDefaultAsync(b => b.Id == id);
 
             if (booking == null)
                 return false;
 
             booking.Status = status;
 
-            var history = new BookingStatusHistory
+            // Toggle availability based on status
+            if (status == "Accepted" && booking.Equipment != null)
+                booking.Equipment.IsAvailable = false;
+
+            if (status == "Rejected" && booking.Equipment != null)
+                booking.Equipment.IsAvailable = true;
+
+            _context.BookingStatusHistories.Add(new BookingStatusHistory
             {
                 BookingId = booking.Id,
                 Status = status
-            };
-
-            _context.BookingStatusHistories.Add(history);
+            });
 
             await _context.SaveChangesAsync();
-
             return true;
         }
 
@@ -128,22 +134,26 @@ GetBookingsByOwnerAsync(int ownerId)
 
         public async Task<bool> CancelBookingAsync(int id)
         {
-            var booking = await _context.Bookings.FindAsync(id);
+            var booking = await _context.Bookings
+                .Include(b => b.Equipment)   // add this
+                .FirstOrDefaultAsync(b => b.Id == id);
 
             if (booking == null)
                 return false;
 
             booking.Status = "Cancelled";
 
-            _context.BookingStatusHistories.Add(
-                new BookingStatusHistory
-                {
-                    BookingId = booking.Id,
-                    Status = "Cancelled"
-                });
+            // Restore availability when cancelled
+            if (booking.Equipment != null)
+                booking.Equipment.IsAvailable = true;
+
+            _context.BookingStatusHistories.Add(new BookingStatusHistory
+            {
+                BookingId = booking.Id,
+                Status = "Cancelled"
+            });
 
             await _context.SaveChangesAsync();
-
             return true;
         }
 
@@ -181,7 +191,9 @@ GetHistoryByBookingAsync(int bookingId)
                 RenterName = booking.RenterName,
                 TotalPrice = booking.TotalPrice,
                 DepositAmount = booking.DepositAmount,
-                Status = booking.Status
+                Status = booking.Status,
+                StartDate = booking.StartDate,   
+                EndDate = booking.EndDate
             };
         }
     }
