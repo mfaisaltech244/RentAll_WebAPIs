@@ -88,7 +88,6 @@ namespace RentAll_WebAPIs.Controllers
                 if (image.Length > MaxFileSizeBytes)
                     return BadRequest(new { message = "File size exceeds the 5 MB limit." });
 
-                // No disk cleanup needed — old Base64 simply gets overwritten in DB
                 imageUrl = await _fileService.SaveFileAsync(image);
             }
 
@@ -106,7 +105,6 @@ namespace RentAll_WebAPIs.Controllers
             if (existing == null)
                 return NotFound(new { message = $"Equipment with ID {id} not found." });
 
-            // FileService.DeleteFile is a no-op for Base64 — kept for interface consistency
             _fileService.DeleteFile(existing.ImageUrl);
 
             await _equipmentService.DeleteEquipmentAsync(id);
