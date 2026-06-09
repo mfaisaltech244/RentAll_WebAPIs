@@ -2,39 +2,25 @@
 {
     public class FileService
     {
-        private readonly IWebHostEnvironment _env;
-
-        public FileService(IWebHostEnvironment env)
+        private static readonly Dictionary<string, string> MimeTypes = new()
         {
-            _env = env;
-        }
+            { ".jpg",  "image/jpeg" },
+            { ".jpeg", "image/jpeg" },
+            { ".png",  "image/png"  },
+            { ".webp", "image/webp" }
+        };
 
         public async Task<string> SaveFileAsync(IFormFile file)
         {
-            var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads");
+            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+            var mime = MimeTypes.GetValueOrDefault(ext, "image/jpeg");
 
-            if (!Directory.Exists(uploadsFolder))
-                Directory.CreateDirectory(uploadsFolder);
+            using var ms = new MemoryStream();
+            await file.CopyToAsync(ms);
+            var base64 = Convert.ToBase64String(ms.ToArray());
 
-            var uniqueName = $"{Guid.NewGuid()}_{file.FileName}";
-            var filePath = Path.Combine(uploadsFolder, uniqueName);
-
-            using var stream = new FileStream(filePath, FileMode.Create);
-            await file.CopyToAsync(stream);
-
-            return $"/uploads/{uniqueName}";
+            return $"data:{mime};base64,{base64}";
         }
-
-        public void DeleteFile(string imageUrl)
-        {
-            if (string.IsNullOrEmpty(imageUrl)) return;
-
-            var filePath = Path.Combine(_env.WebRootPath, imageUrl.TrimStart('/'));
-            if (File.Exists(filePath))
-                File.Delete(filePath);
-        }
+        public void DeleteFile(string imageUrl) { }
     }
 }
-
-
-

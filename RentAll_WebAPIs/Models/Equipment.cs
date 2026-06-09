@@ -15,7 +15,6 @@ namespace RentAll_WebAPIs.Models
         public string Name { get; set; }= string.Empty;
 
         [Required]
-        [StringLength(500)]
         public string Description { get; set; }= string.Empty;
 
         [Column(TypeName = "decimal(18,2)")]
@@ -23,8 +22,8 @@ namespace RentAll_WebAPIs.Models
         public decimal DailyRate { get; set; }
 
         [Required]
-        [StringLength(255)]
-        public string ImageUrl { get; set; }= string.Empty;
+        [Column(TypeName = "TEXT")]  
+        public string ImageUrl { get; set; } = string.Empty;
 
         public bool IsAvailable { get; set; } = true;
 
