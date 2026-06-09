@@ -6,6 +6,10 @@
 
         public int EquipmentId { get; set; }
 
+        public string EquipmentName { get; set; } = string.Empty;
+
+        public string Email { get; set; } = string.Empty;
+
         public string RenterName { get; set; } = string.Empty;
 
         public decimal TotalPrice { get; set; }
