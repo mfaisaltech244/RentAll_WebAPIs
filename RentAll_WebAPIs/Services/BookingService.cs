@@ -17,14 +17,18 @@ namespace RentAll_WebAPIs.Services
 
         public async Task<List<BookingResponseDto>> GetAllBookingsAsync()
         {
-            var bookings = await _context.Bookings.ToListAsync();
+            var bookings = await _context.Bookings
+                .Include(b => b.Equipment)       
+                .ToListAsync();
 
             return bookings.Select(MapToDto).ToList();
         }
 
         public async Task<BookingResponseDto?> GetBookingByIdAsync(int id)
         {
-            var booking = await _context.Bookings.FindAsync(id);
+            var booking = await _context.Bookings
+                .Include(b => b.Equipment)      
+                .FirstOrDefaultAsync(b => b.Id == id);
 
             if (booking == null)
                 return null;
@@ -84,31 +88,36 @@ namespace RentAll_WebAPIs.Services
 
         public async Task<bool> UpdateBookingStatusAsync(int id, string status)
         {
-            var booking = await _context.Bookings.FindAsync(id);
+            var booking = await _context.Bookings
+                .Include(b => b.Equipment)   
+                .FirstOrDefaultAsync(b => b.Id == id);
 
             if (booking == null)
                 return false;
 
             booking.Status = status;
 
-            var history = new BookingStatusHistory
+            if (status == "Accepted" && booking.Equipment != null)
+                booking.Equipment.IsAvailable = false;
+
+            if (status == "Rejected" && booking.Equipment != null)
+                booking.Equipment.IsAvailable = true;
+
+            _context.BookingStatusHistories.Add(new BookingStatusHistory
             {
                 BookingId = booking.Id,
                 Status = status
-            };
-
-            _context.BookingStatusHistories.Add(history);
+            });
 
             await _context.SaveChangesAsync();
-
             return true;
         }
 
 
-        public async Task<List<BookingResponseDto>>
-GetBookingsByEquipmentAsync(int equipmentId)
+        public async Task<List<BookingResponseDto>> GetBookingsByEquipmentAsync(int equipmentId)
         {
             var bookings = await _context.Bookings
+                .Include(b => b.Equipment)       
                 .Where(b => b.EquipmentId == equipmentId)
                 .ToListAsync();
 
@@ -128,22 +137,25 @@ GetBookingsByOwnerAsync(int ownerId)
 
         public async Task<bool> CancelBookingAsync(int id)
         {
-            var booking = await _context.Bookings.FindAsync(id);
+            var booking = await _context.Bookings
+                .Include(b => b.Equipment)  
+                .FirstOrDefaultAsync(b => b.Id == id);
 
             if (booking == null)
                 return false;
 
             booking.Status = "Cancelled";
 
-            _context.BookingStatusHistories.Add(
-                new BookingStatusHistory
-                {
-                    BookingId = booking.Id,
-                    Status = "Cancelled"
-                });
+            if (booking.Equipment != null)
+                booking.Equipment.IsAvailable = true;
+
+            _context.BookingStatusHistories.Add(new BookingStatusHistory
+            {
+                BookingId = booking.Id,
+                Status = "Cancelled"
+            });
 
             await _context.SaveChangesAsync();
-
             return true;
         }
 
@@ -178,10 +190,14 @@ GetHistoryByBookingAsync(int bookingId)
             {
                 Id = booking.Id,
                 EquipmentId = booking.EquipmentId,
+                EquipmentName = booking.Equipment?.Name ?? "Unknown",  
                 RenterName = booking.RenterName,
+                Email = booking.Email,                                 
                 TotalPrice = booking.TotalPrice,
                 DepositAmount = booking.DepositAmount,
-                Status = booking.Status
+                Status = booking.Status,
+                StartDate = booking.StartDate,
+                EndDate = booking.EndDate
             };
         }
     }

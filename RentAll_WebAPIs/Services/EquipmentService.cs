@@ -90,7 +90,7 @@ namespace RentAll_WebAPIs.Services
 
             var activeBooking = await _context.Bookings
                 .Where(b => b.EquipmentId == equipmentId
-                         && (b.Status == "Confirmed" || b.Status == "Pending")
+                         && (b.Status == "Accepted" || b.Status == "Pending")
                          && b.EndDate >= DateTime.UtcNow)
                 .OrderBy(b => b.EndDate)
                 .FirstOrDefaultAsync();

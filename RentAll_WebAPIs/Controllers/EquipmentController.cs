@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RentAll_WebAPIs.DTOs;
 using RentAll_WebAPIs.Models;
 using RentAll_WebAPIs.Services;
@@ -12,8 +11,9 @@ namespace RentAll_WebAPIs.Controllers
     {
         private readonly IEquipmentService _equipmentService;
         private readonly FileService _fileService;
+
         private static readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png", ".webp" };
-        private const long MaxFileSizeBytes = 5 * 1024 * 1024;
+        private const long MaxFileSizeBytes = 5 * 1024 * 1024; 
 
         public EquipmentController(IEquipmentService equipmentService, FileService fileService)
         {
@@ -31,7 +31,6 @@ namespace RentAll_WebAPIs.Controllers
         public async Task<ActionResult<Equipment>> GetById(int id)
         {
             var equipment = await _equipmentService.GetEquipmentByIdAsync(id);
-
             if (equipment == null)
                 return NotFound();
 
@@ -41,15 +40,13 @@ namespace RentAll_WebAPIs.Controllers
         [HttpGet("owner/{ownerId}")]
         public async Task<ActionResult<List<Equipment>>> GetByOwner(int ownerId)
         {
-            var equipment =
-                await _equipmentService.GetEquipmentByOwnerAsync(ownerId);
-
+            var equipment = await _equipmentService.GetEquipmentByOwnerAsync(ownerId);
             return Ok(equipment);
         }
 
         [HttpPost]
         [Consumes("multipart/form-data")]
-        public async Task<IActionResult> AddEquipment([FromForm] EquipmentCreateDto dto,IFormFile? image)
+        public async Task<IActionResult> AddEquipment([FromForm] EquipmentCreateDto dto, IFormFile? image)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -64,12 +61,11 @@ namespace RentAll_WebAPIs.Controllers
             if (image.Length > MaxFileSizeBytes)
                 return BadRequest(new { message = "File size exceeds the 5 MB limit." });
 
-            var imageUrl = await _fileService.SaveFileAsync(image);
+            var imageUrl = await _fileService.SaveFileAsync(image);   // Returns Base64 data URI
             var equipment = await _equipmentService.AddEquipmentAsync(dto, imageUrl);
 
             return CreatedAtAction(nameof(GetById), new { id = equipment.Id }, equipment);
         }
-
 
         [HttpPut("{id:int}")]
         [Consumes("multipart/form-data")]
@@ -92,10 +88,6 @@ namespace RentAll_WebAPIs.Controllers
                 if (image.Length > MaxFileSizeBytes)
                     return BadRequest(new { message = "File size exceeds the 5 MB limit." });
 
-                var existing = await _equipmentService.GetEquipmentByIdAsync(id);
-                if (existing != null && !string.IsNullOrEmpty(existing.ImageUrl))
-                    _fileService.DeleteFile(existing.ImageUrl);
-
                 imageUrl = await _fileService.SaveFileAsync(image);
             }
 
@@ -105,7 +97,6 @@ namespace RentAll_WebAPIs.Controllers
 
             return NoContent();
         }
-
 
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> DeleteEquipment(int id)

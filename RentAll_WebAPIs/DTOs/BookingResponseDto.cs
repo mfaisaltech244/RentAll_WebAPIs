@@ -6,6 +6,10 @@
 
         public int EquipmentId { get; set; }
 
+        public string EquipmentName { get; set; } = string.Empty;
+
+        public string Email { get; set; } = string.Empty;
+
         public string RenterName { get; set; } = string.Empty;
 
         public decimal TotalPrice { get; set; }
@@ -13,5 +17,8 @@
         public decimal DepositAmount { get; set; }
 
         public string Status { get; set; } = string.Empty;
+
+        public DateTime StartDate { get; set; }  
+        public DateTime EndDate { get; set; }  
     }
 }
