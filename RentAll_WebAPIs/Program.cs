@@ -48,7 +48,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseRouting();
-
+app.UseStaticFiles();
 app.UseCors("angular");
 
 // app.UseAuthentication();
