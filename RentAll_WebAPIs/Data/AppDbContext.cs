@@ -79,7 +79,16 @@ namespace RentAll_WebAPIs.Data
                             "123456"),
                     Role = "Owner",
                     CreatedAt = new DateTime(2025,1,1)
+                },
+                new User {
+                    Id = 5,
+                    Username = "MUhammad Faisal",
+                    Email = "m.faisaltech244@gmail.com",
+                    PasswordHash = PasswordHelper.HashPassword("232"),
+                    Role = "Owner",
+                    CreatedAt = new DateTime(2026,6,10)
                 }
+                
             );
 
         }
